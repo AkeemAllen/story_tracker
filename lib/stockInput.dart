@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import './models/stockInfoModel.dart';
+import './loader.dart';
 
 class StockInput extends StatefulWidget {
   @override
@@ -10,16 +12,19 @@ class StockInput extends StatefulWidget {
 
 class _StockInputState extends State<StockInput> {
   final _formKey = GlobalKey<FormState>();
+  var stockInfo = StockInfo();
   String _tickerSymbol;
   Map data;
-  String information;
-  List stockInfo = [];
+  bool loading = false;
 
   Future getStockData() async {
     final String yahooFinanceUrl =
         'https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/get-detail?symbol=$_tickerSymbol';
-    final String alphaVantageUrl =
-        "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=$_tickerSymbol&interval=daily&apikey=C3XV5BAXDU772WS5&time_period=200&series_type=open";
+    // final String alphaVantageUrl =
+    //     "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=$_tickerSymbol&interval=daily&apikey=C3XV5BAXDU772WS5&time_period=200&series_type=open";
+    setState(() {
+      loading = true;
+    });
 
     http.Response response = await http.get(
       Uri.encodeFull(yahooFinanceUrl),
@@ -29,24 +34,27 @@ class _StockInputState extends State<StockInput> {
         'x-rapidapi-key': "61680401b9msh5cdcbb9c3172241p19d5d8jsnd0ccf7301e82"
       },
     );
+
     data = json.decode(response.body);
-    setState(() {
-      stockInfo.add(data["price"]["longName"]);
-    });
-    debugPrint(information);
+    if (data != null) {
+      setState(() {
+        loading = false;
+        stockInfo.companyName = data['price']['longName'];
+        stockInfo.currentPrice = data["price"]["regularMarketOpen"]["raw"];
+        stockInfo.marketCap = data["price"]["marketCap"]["raw"];
+      });
+    }
+    print(response.statusCode);
   }
 
   Widget _presentData(label, data) {
-    if (data != null) {
-      return ListTile(
-        title: Text(label),
-        trailing: Text(data[0]),
-        onTap: () {
-          print('Pressed');
-        },
-      );
-    }
-    return Text('Data Here');
+    return ListTile(
+      title: Text(label),
+      trailing: Text(data),
+      onTap: () {
+        print('Pressed');
+      },
+    );
   }
 
   @override
@@ -83,7 +91,19 @@ class _StockInputState extends State<StockInput> {
                 child: Text('Submit'),
               ),
             ),
-            _presentData('Company Name', stockInfo),
+            Center(
+              child: loading == true ? Loader() : Text(''),
+            ),
+            stockInfo.companyName != null
+                ? _presentData('Company Name', stockInfo.companyName)
+                : Text(''),
+            stockInfo.currentPrice != null
+                ? _presentData(
+                    'Current Price', stockInfo.currentPrice.toString())
+                : Text(''),
+            stockInfo.marketCap != null
+                ? _presentData('Company Name', stockInfo.marketCap.toString())
+                : Text(''),
           ],
         ),
       ),
