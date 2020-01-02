@@ -16,6 +16,7 @@ class _StockInputState extends State<StockInput> {
   String _tickerSymbol;
   Map data;
   bool loading = false;
+  Loader _loader = Loader();
 
   Future getStockData() async {
     final String yahooFinanceUrl =
@@ -92,7 +93,7 @@ class _StockInputState extends State<StockInput> {
               ),
             ),
             Center(
-              child: loading == true ? Loader() : Text(''),
+              child: loading == true ? _loader : Text(''),
             ),
             stockInfo.companyName != null
                 ? _presentData('Company Name', stockInfo.companyName)

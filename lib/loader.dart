@@ -56,6 +56,12 @@ class _LoaderState extends State<Loader> with SingleTickerProviderStateMixin {
     controller.repeat();
   }
 
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
   Widget _buildDot(int index) {
     return Transform.translate(
       offset:
