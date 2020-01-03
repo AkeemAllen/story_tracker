@@ -41,8 +41,24 @@ class _StockInputState extends State<StockInput> {
       setState(() {
         loading = false;
         stockInfo.companyName = data['price']['longName'];
-        stockInfo.currentPrice = data["price"]["regularMarketOpen"]["raw"];
-        stockInfo.marketCap = data["price"]["marketCap"]["raw"];
+        stockInfo.currentPrice = data["price"]["regularMarketPrice"]["fmt"];
+        stockInfo.marketCap = data["price"]["marketCap"]["fmt"];
+        stockInfo.shareOutstanding = data["quoteData"]
+            [_tickerSymbol.toUpperCase()]["sharesOutstanding"]["fmt"];
+        stockInfo.debt = data["financialData"]["totalDebt"]["fmt"];
+        stockInfo.priceToBook =
+            data["defaultKeyStatistics"]["priceToBook"]["fmt"];
+        stockInfo.priceToSales =
+            data["summaryDetail"]["priceToSalesTrailing12Months"]["fmt"];
+        stockInfo.profitMargin = data["financialData"]["profitMargins"]["fmt"];
+        stockInfo.returnOnEquity =
+            data["financialData"]["returnOnEquity"]["fmt"];
+        stockInfo.cash = data["financialData"]["totalCash"]["fmt"];
+        stockInfo.currentRatio = data["financialData"]["currentRatio"]["fmt"];
+        stockInfo.revenueArray = [];
+        for (var element in data["earnings"]["financialsChart"]["yearly"]) {
+          stockInfo.revenueArray.add(element['revenue']['fmt']);
+        }
       });
     }
     print(response.statusCode);
@@ -55,6 +71,32 @@ class _StockInputState extends State<StockInput> {
       onTap: () {
         print('Pressed');
       },
+    );
+  }
+
+  void _showStatistics() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (BuildContext context) {
+        return Scaffold(
+          appBar: AppBar(
+              title: Text(_tickerSymbol.toUpperCase() + ' company data')),
+          body: ListView(
+            children: <Widget>[
+              _presentData('Company Name', stockInfo.companyName),
+              _presentData('Current Price', stockInfo.currentPrice),
+              _presentData('Market Cap', stockInfo.marketCap),
+              _presentData('Shares Outstanding', stockInfo.shareOutstanding),
+              _presentData('Total Cash', stockInfo.cash),
+              _presentData('Total Debt', stockInfo.debt),
+              _presentData('Profit Margin', stockInfo.profitMargin),
+              _presentData('ROE', stockInfo.returnOnEquity),
+              _presentData('Current Ratio', stockInfo.currentRatio),
+              _presentData('P/B', stockInfo.priceToBook),
+              _presentData('P/S', stockInfo.priceToSales),
+            ],
+          ),
+        );
+      }),
     );
   }
 
@@ -96,14 +138,12 @@ class _StockInputState extends State<StockInput> {
               child: loading == true ? _loader : Text(''),
             ),
             stockInfo.companyName != null
-                ? _presentData('Company Name', stockInfo.companyName)
-                : Text(''),
-            stockInfo.currentPrice != null
-                ? _presentData(
-                    'Current Price', stockInfo.currentPrice.toString())
-                : Text(''),
-            stockInfo.marketCap != null
-                ? _presentData('Company Name', stockInfo.marketCap.toString())
+                ? RaisedButton(
+                    child: Text('Show Statistics'),
+                    onPressed: () {
+                      _showStatistics();
+                    },
+                  )
                 : Text(''),
           ],
         ),
